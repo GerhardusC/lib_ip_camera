@@ -1,0 +1,6 @@
+[package]
+name = "lib_ip_cam"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
