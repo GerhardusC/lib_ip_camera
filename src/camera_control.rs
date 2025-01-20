@@ -9,19 +9,29 @@ pub enum Direction {
 }
 
 pub struct CameraControl {
-    pub direction: Direction,
-    pub logging_enabled: bool,
-    pub log_location:  Option<PathBuf>,
+    ip: String,
+    stream: Option<TcpStream>,
+    logging_enabled: bool,
+    log_location:  Option<PathBuf>,
+    port: u32, // u16 only goes to 65535
 }
 
 impl CameraControl {
-    pub fn new(direction: Direction) -> CameraControl {
+    pub fn new(ip: String, port: u32) -> CameraControl {
         CameraControl {
-            direction,
+            ip,
+            port,
             log_location: None,
             logging_enabled: false,
+            stream: None,
         }
     }
+    pub fn connect (&mut self) -> Result<&Self, Error>{
+        {
+            self.stream = TcpStream::connect()
+        }
+    }
+
     pub fn enable_logging(&mut self, log_location: PathBuf) {
         self.logging_enabled = true;
         self.log_location = Some(PathBuf::from("./logs"));
