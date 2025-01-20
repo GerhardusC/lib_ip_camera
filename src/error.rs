@@ -1,0 +1,28 @@
+use std::convert::Infallible;
+
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum Error {
+    // #[error("Invalid timestamp")]
+    // InvalidTimestampRequest(SystemTimeError),
+    #[error("IO Error.")] //Name error.
+    IoError(std::io::Error), //Add optional errors inside.
+    #[error("Failed to write logs to file.")]
+    LogWriterError,
+    #[error("Infallible.")]
+    Infallible,
+}
+
+// Example to impl from:
+impl From<std::io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Error::IoError(value)
+    }
+}
+
+impl From<Infallible> for Error {
+    fn from(_value: Infallible) -> Self {
+        Error::Infallible
+    }
+}
