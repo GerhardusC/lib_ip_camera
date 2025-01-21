@@ -2,7 +2,7 @@ use std::{fs::{self, DirBuilder}, io::Write, path::PathBuf};
 
 use crate::error::Error;
 
-pub fn log_buffer(path: PathBuf, buff: &[u8]) -> Result<(), Error> {
+pub fn log_buffer(path: &PathBuf, buff: &[u8]) -> Result<(), Error> {
     let file = fs::OpenOptions::new().append(true).write(true).open(&path);
     match file {
         Ok(mut file) => {

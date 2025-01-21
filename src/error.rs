@@ -12,6 +12,12 @@ pub enum Error {
     LogWriterError,
     #[error("Infallible.")]
     Infallible,
+
+    #[error("Failed to read IP address or port.")]
+    IPError,
+
+    #[error("No path supplied to log to.")]
+    NoPathSuppliedToLog,
 }
 
 // Example to impl from:
