@@ -4,6 +4,7 @@ mod tests {
 
     use crate::utils::log_buffer;
     use crate::camera_control::{CameraControl, Direction};
+    use crate::error::Error;
 
     #[test]
     fn buffer_logged_to_file() {
@@ -24,10 +25,45 @@ mod tests {
 
         assert_eq!(text, &contents);
     }
-    fn cant_move_camera_with_invalid_ip() {
-        let mut control = CameraControl::new("192.168.0.5", 554);
-        control.connect();
-        assert_eq!(1, 2);
+
+    #[test]
+    fn cannot_connect_to_ip() {
+        let mut control = CameraControl::new("192.168.0.23", 554);
+        let res = control.connect();
+        match res {
+            Ok(x) => {
+                println!("CONNECTED... {:?}", x);
+                panic!();
+            },
+            Err(e) => {
+                match e {
+                    Error::IoError(_error) => {
+                        println!("IO error");
+                        assert!(true);
+                    },
+                    Error::LogWriterError => {
+                        println!("Log writer error");
+                        panic!()
+                    },
+                    Error::Infallible => {
+                        println!("Infallible");
+                        panic!()
+                    },
+                    Error::IPError => {
+                        println!("Ip Error");
+                        panic!()
+                    },
+                    Error::NoPathSuppliedToLog => {
+                        println!("No path supplied");
+                        panic!()
+                    },
+                    Error::WhatTheFunkError => {
+                        println!("What the funk error");
+                        panic!()
+                    }
+                }
+            },
+        }
     }
 
 }

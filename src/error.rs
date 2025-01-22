@@ -18,6 +18,9 @@ pub enum Error {
 
     #[error("No path supplied to log to.")]
     NoPathSuppliedToLog,
+
+    #[error("Something really weird must have happened for you to end up in this position, damn.")]
+    WhatTheFunkError,
 }
 
 // Example to impl from:

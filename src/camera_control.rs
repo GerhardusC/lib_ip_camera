@@ -1,4 +1,4 @@
-use std::{io::Write, net::{TcpStream, ToSocketAddrs}, path::PathBuf};
+use std::{io::Write, net::{SocketAddr, TcpStream, ToSocketAddrs}, path::PathBuf, thread::sleep, time::Duration};
 
 use crate::{error::Error, utils::log_buffer};
 pub enum Direction {
@@ -8,13 +8,15 @@ pub enum Direction {
     LEFT,
 }
 
+#[derive(Debug)]
 pub struct CameraControl {
     ip: String,
-    write_stream: Option<TcpStream>,
-    read_stream: Option<TcpStream>,
+    stream: Option<TcpStream>,
     logging_enabled: bool,
     log_location:  Option<PathBuf>,
     port: u32, // u16 only goes to 65535
+    reconnect_timeout: u8,
+    reconnect_count: u8,
 }
 
 impl CameraControl {
@@ -24,32 +26,65 @@ impl CameraControl {
             port,
             log_location: None,
             logging_enabled: false,
-            write_stream: None,
-            read_stream: None,
+            stream: None,
+            reconnect_timeout: 1,
+            reconnect_count: 5,
         }
     }
-    pub fn connect (&mut self) -> Result<&Self, Error>{
-        self.write_stream = Some(TcpStream::connect(format!("{}:{}", &self.ip, &self.port))?);
-        self.read_stream = Some(TcpStream::connect(format!("{}:{}", &self.ip, &self.port))?);
+    pub fn connect (&mut self) -> Result<&mut Self, Error>{
+        let ip_option = format!("{}:{}", self.ip, self.port).to_socket_addrs()?.last();
+        let addr = match ip_option {
+            Some(addr) => {
+                addr
+            },
+            None =>{
+                return Err(Error::IPError);
+            },
+        };
+        
+        match TcpStream::connect_timeout(&addr, Duration::from_secs(5)) {
+            Ok(stream) => {
+                self.stream = Some(stream);
+                return Ok(self);
+            },
+            Err(_) => {
+                if self.reconnect_count > 0 {
+                    self.reconnect_count -= 1;
+                    sleep(Duration::from_secs(self.reconnect_timeout.into()));
+                    return self.connect();
+                }
+            },
+        }
         Ok(self)
     }
 
-    pub fn enable_logging(&mut self, log_location: PathBuf) {
+    pub fn enable_logging(&mut self, log_location: PathBuf) -> &Self {
         self.logging_enabled = true;
         self.log_location = Some(PathBuf::from("./logs"));
+        self
+    }
+
+    pub fn set_reconnect_timeout(&mut self, seconds: u8) -> &Self {
+        self.reconnect_timeout = seconds;
+        self
+    }
+
+    pub fn set_reconnect_count(&mut self, count: u8) -> &Self {
+        self.reconnect_count = count;
+        self
     }
 
     pub fn move_camera(&mut self, direction: Direction, reconnect_count: u8) -> Result<(), Error> {
-        let mut stream = match &self.write_stream {
+        let mut stream = match &self.stream {
             Some(stream) => {
                 stream
             },
             None => {
-                self.connect();
-                return self.move_camera(direction, reconnect_count - 1);
-            },
+                self.connect()?;
+                return self.move_camera(direction, reconnect_count);
+            }
         };
-        let ip = if let Some(stream) = &self.write_stream {
+        let ip = if let Some(stream) = &self.stream {
             stream.peer_addr()?
         } else {
             let ip_str = format!("{}:{}", self.ip, self.port);
