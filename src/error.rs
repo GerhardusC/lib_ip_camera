@@ -13,6 +13,9 @@ pub enum Error {
     #[error("Infallible.")]
     Infallible,
 
+    #[error("Connection error")]
+    ConnectionError,
+
     #[error("Failed to read IP address or port.")]
     IPError,
 

@@ -60,6 +60,10 @@ mod tests {
                     Error::WhatTheFunkError => {
                         println!("What the funk error");
                         panic!()
+                    },
+                    Error::ConnectionError => {
+                        println!("Connection error");
+                        panic!()
                     }
                 }
             },

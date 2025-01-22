@@ -52,10 +52,11 @@ impl CameraControl {
                     self.reconnect_count -= 1;
                     sleep(Duration::from_secs(self.reconnect_timeout.into()));
                     return self.connect();
+                } else {
+                    return Err(Error::ConnectionError);
                 }
             },
         }
-        Ok(self)
     }
 
     pub fn enable_logging(&mut self, log_location: PathBuf) -> &Self {
