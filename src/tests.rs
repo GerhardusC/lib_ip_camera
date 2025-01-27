@@ -3,7 +3,7 @@ mod tests {
     use std::{fs, path::PathBuf, str::FromStr, env};
 
     use crate::utils::log_buffer;
-    use crate::camera_control::{CameraControl, Direction};
+    use crate::camera_control::CameraControl;
     use crate::error::Error;
 
     #[test]

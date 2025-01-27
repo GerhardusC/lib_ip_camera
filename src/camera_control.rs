@@ -34,7 +34,7 @@ impl CameraControl {
 
     pub fn enable_logging(&mut self, log_location: PathBuf) -> &Self {
         self.logging_enabled = true;
-        self.log_location = Some(PathBuf::from("./logs"));
+        self.log_location = Some(log_location);
         self
     }
 

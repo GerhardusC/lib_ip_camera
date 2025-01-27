@@ -1,4 +1,4 @@
 mod error;
 mod utils;
-mod camera_control;
+pub mod camera_control;
 mod tests;
