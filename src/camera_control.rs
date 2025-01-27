@@ -76,14 +76,14 @@ impl CameraControl {
         }
     }
 
-    pub fn move_camera(&mut self, direction: Direction, reconnect_count: u8) -> Result<(), Error> {
+    pub fn move_camera(&mut self, direction: Direction) -> Result<(), Error> {
         let mut stream = match &self.stream {
             Some(stream) => {
                 stream
             },
             None => {
                 self.connect()?;
-                return self.move_camera(direction, reconnect_count);
+                return self.move_camera(direction);
             }
         };
         let ip = if let Some(stream) = &self.stream {
