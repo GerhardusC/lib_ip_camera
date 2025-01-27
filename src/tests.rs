@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::PathBuf, str::FromStr};
+    use std::{fs, path::PathBuf, str::FromStr, env};
 
     use crate::utils::log_buffer;
     use crate::camera_control::{CameraControl, Direction};
@@ -28,7 +28,11 @@ mod tests {
 
     #[test]
     fn cannot_connect_to_ip() {
-        let mut control = CameraControl::new("192.168.0.23", 554);
+        let dummy_ip = env::var("DUMMY_INACCESSIBLE_IP").expect("You should set your DUMMY_INACCESSIBLE_IP environment variable to run tests.");
+        let mut control = CameraControl::new(&dummy_ip, 554);
+        control.set_reconnect_timeout(1);
+        control.set_reconnect_count(1);
+        println!("{control:?}");
         let res = control.connect();
         match res {
             Ok(x) => {
@@ -39,7 +43,7 @@ mod tests {
                 match e {
                     Error::IoError(_error) => {
                         println!("IO error");
-                        assert!(true);
+                        panic!();
                     },
                     Error::LogWriterError => {
                         println!("Log writer error");
@@ -63,12 +67,21 @@ mod tests {
                     },
                     Error::ConnectionError => {
                         println!("Connection error");
-                        panic!()
+                        assert!(true);
                     }
                 }
             },
         }
     }
 
+    #[test]
+    fn connects_to_camera() {
+        let dummy_ip = env::var("DUMMY_IP").expect("You should set your DUMMY_IP environment variable to run tests.");
+        let mut control = CameraControl::new(&dummy_ip, 554);
+        control.set_reconnect_timeout(1);
+        control.set_reconnect_count(1);
+        println!("{control:?}");
+        control.connect().expect("Should be able to connect to DUMMY_IP");
+    }
 }
 

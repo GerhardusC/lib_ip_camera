@@ -1,4 +1,4 @@
-use std::{io::Write, net::{SocketAddr, TcpStream, ToSocketAddrs}, path::PathBuf, thread::sleep, time::Duration};
+use std::{io::Write, net::{TcpStream, ToSocketAddrs}, path::PathBuf, thread::sleep, time::Duration};
 
 use crate::{error::Error, utils::log_buffer};
 pub enum Direction {
@@ -28,34 +28,7 @@ impl CameraControl {
             logging_enabled: false,
             stream: None,
             reconnect_timeout: 1,
-            reconnect_count: 5,
-        }
-    }
-    pub fn connect (&mut self) -> Result<&mut Self, Error>{
-        let ip_option = format!("{}:{}", self.ip, self.port).to_socket_addrs()?.last();
-        let addr = match ip_option {
-            Some(addr) => {
-                addr
-            },
-            None =>{
-                return Err(Error::IPError);
-            },
-        };
-        
-        match TcpStream::connect_timeout(&addr, Duration::from_secs(5)) {
-            Ok(stream) => {
-                self.stream = Some(stream);
-                return Ok(self);
-            },
-            Err(_) => {
-                if self.reconnect_count > 0 {
-                    self.reconnect_count -= 1;
-                    sleep(Duration::from_secs(self.reconnect_timeout.into()));
-                    return self.connect();
-                } else {
-                    return Err(Error::ConnectionError);
-                }
-            },
+            reconnect_count: 5,       
         }
     }
 
@@ -73,6 +46,34 @@ impl CameraControl {
     pub fn set_reconnect_count(&mut self, count: u8) -> &Self {
         self.reconnect_count = count;
         self
+    }
+    pub fn connect (&mut self) -> Result<&mut Self, Error>{
+        let ip_option = format!("{}:{}", self.ip, self.port).to_socket_addrs()?.last();
+        let addr = match ip_option {
+            Some(addr) => {
+                addr
+            },
+            None =>{
+                return Err(Error::IPError);
+            },
+        };
+        
+        match TcpStream::connect_timeout(&addr, Duration::from_secs(self.reconnect_timeout.into())) {
+            Ok(stream) => {
+                self.stream = Some(stream);
+                return Ok(self);
+            },
+            Err(_) => {
+                if self.reconnect_count > 0 {
+                    println!("Reconnecting: {}.", self.reconnect_count);
+                    self.reconnect_count -= 1;
+                    sleep(Duration::from_secs(self.reconnect_timeout.into()));
+                    return self.connect();
+                } else {
+                    return Err(Error::ConnectionError);
+                }
+            },
+        }
     }
 
     pub fn move_camera(&mut self, direction: Direction, reconnect_count: u8) -> Result<(), Error> {
@@ -98,6 +99,7 @@ impl CameraControl {
         let direction_string = match direction {
             Direction::UP => "UP",
             Direction::RIGHT => "RIGHT",
+            // Yes, DWON, not DOWN, this is on the Yoosee camera, I don't know if its the same on any other cameras.
             Direction::DOWN => "DWON",
             Direction::LEFT => "LEFT",
         };
